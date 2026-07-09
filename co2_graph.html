@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CO₂ Emissions Per Capita</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+
+<h2>CO₂ emissions per capita</h2>
+<div id="chart" style="width:100%;height:700px;"></div>
+
+<script>
+fetch("co2-emissions-per-capita.csv")
+.then(response => response.text())
+.then(csv => {
+
+  const lines = csv.trim().split(/\r?\n/);
+  const rows = lines.slice(1);
+
+  const countries = [
+    "World",
+    "United States",
+    "Russia",
+    "China",
+    "India",
+    "Turkey",
+    "Japan",
+    "Germany",
+    "European Union (27)"
+  ];
+
+  const data = {};
+
+  countries.forEach(country => {
+    data[country] = {
+      years: [],
+      values: []
+    };
+  });
+
+  rows.forEach(row => {
+    const values = row.split(",");
+
+    const entity = values[0];
+    const year = Number(values[2]);
+    const co2 = Number(values[3]);
+
+    if (countries.includes(entity)) {
+      data[entity].years.push(year);
+      data[entity].values.push(co2);
+    }
+  });
+
+  const traces = countries.map(country => ({
+    x: data[country].years,
+    y: data[country].values,
+    mode: "lines",
+    name: country === "Turkey" ? "Türkiye" : country,
+    line: { width: country === "World" ? 4 : 2.5 },
+    hovertemplate:
+      "<b>%{fullData.name}</b><br>" +
+      "Year: %{x}<br>" +
+      "CO₂: %{y:.2f} tonnes per person<extra></extra>"
+  }));
+
+  const layout = {
+    title: {
+      text: "CO₂ emissions per capita",
+      font: { size: 24 }
+    },
+
+    hovermode: "x unified",
+
+    plot_bgcolor: "white",
+    paper_bgcolor: "white",
+
+    xaxis: {
+      title: "Year",
+      showgrid: false,
+      zeroline: false
+    },
+
+    yaxis: {
+      title: "Tonnes CO₂ per person",
+      gridcolor: "#e6e6e6",
+      zeroline: false
+    },
+
+    legend: {
+      orientation: "h",
+      y: -0.25
+    },
+
+    margin: {
+      l: 80,
+      r: 30,
+      t: 80,
+      b: 130
+    },
+
+    font: {
+      family: "Arial",
+      size: 14
+    }
+  };
+
+  const config = {
+    responsive: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: ["lasso2d", "select2d"]
+  };
+
+  Plotly.newPlot("chart", traces, layout, config);
+
+})
+.catch(error => {
+  document.body.innerHTML +=
+    "<h3 style='color:red'>Error loading CSV:</h3><pre>" +
+    error +
+    "</pre>";
+});
+</script>
+
+</body>
+</html>
